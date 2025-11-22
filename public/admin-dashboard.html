@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Key Management</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #ec407a;
+            --primary-dark: #c2185b;
+            --primary-bg: #fce4ec;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --error: #e63946;
+            --text-dark: #424242;
+            --text-light: #757575;
+        }
+        body { font-family: 'Inter', sans-serif; background: var(--primary-bg); min-height: 100vh; }
+        .container { max-width: 1400px; margin: 30px auto; padding: 0 20px; }
+        .page { background: white; padding: 40px; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); }
+        .page-header { text-align: center; margin-bottom: 30px; }
+        h1 { color: var(--primary-dark); font-size: 2rem; margin-bottom: 5px; }
+        .page-subtitle { color: var(--text-light); }
+        .logout-btn { float: right; margin-top: -30px; background: var(--primary); color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .logout-btn:hover { background: var(--primary-dark); }
+        
+        /* Stats Cards */
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }
+        .stat-card { background: linear-gradient(135deg, #fce4ec, #f8bbd0); padding: 20px; border-radius: 10px; text-align: center; }
+        .stat-card.warning { background: linear-gradient(135deg, #fff3e0, #ffe0b2); }
+        .stat-card.danger { background: linear-gradient(135deg, #ffebee, #ffcdd2); }
+        .stat-value { font-size: 2rem; font-weight: 700; color: var(--primary-dark); }
+        .stat-card.warning .stat-value { color: var(--warning); }
+        .stat-card.danger .stat-value { color: var(--error); }
+        .stat-label { font-size: 0.8rem; color: var(--text-light); text-transform: uppercase; }
+
+        /* Table */
+        table { width: 100%; border-collapse: separate; border-spacing: 0; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        thead { background: var(--primary); color: white; }
+        th, td { padding: 12px 14px; text-align: left; font-size: 0.85rem; }
+        th { font-weight: 600; text-transform: uppercase; }
+        tbody tr { background: white; }
+        tbody tr:nth-child(even) { background: #fdfdfd; }
+        tbody tr:hover { background: var(--primary-bg); }
+        .api-key-text { font-family: monospace; font-size: 0.8rem; color: var(--text-dark); max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        /* Status Badges */
+        .status { display: inline-block; padding: 5px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+        .status.aktif { background: #e8f5e9; color: var(--success); border: 1px solid var(--success); }
+        .status.nonaktif { background: #ffebee; color: var(--error); border: 1px solid var(--error); }
+
+        /* Last Login Status */
+        .login-info { display: flex; flex-direction: column; gap: 2px; }
+        .login-date { font-size: 0.8rem; color: var(--text-dark); }
+        .login-badge { font-size: 0.7rem; padding: 2px 6px; border-radius: 3px; display: inline-block; margin-top: 2px; }
+        .login-badge.ok { background: #e8f5e9; color: var(--success); }
+        .login-badge.warning { background: #fff3e0; color: var(--warning); }
+        .login-badge.expired { background: #ffebee; color: var(--error); }
+        .login-badge.never { background: #f5f5f5; color: var(--text-light); }
+
+        /* Action Buttons */
+        td.action-cell { display: flex; flex-direction: column; gap: 5px; }
+        .action-btn { padding: 6px 12px; border: none; border-radius: 5px; cursor: pointer; font-size: 0.8rem; font-weight: 600; width: 80px; text-align: center; }
+        .btn-delete { background: var(--error); color: white; }
+        .btn-delete:hover { background: #c0392b; }
+        .btn-toggle { background: #f1f1f1; color: var(--text-dark); border: 1px solid #ccc; }
+        .btn-toggle:hover { background: #e0e0e0; }
+        .btn-toggle.enable { background: var(--success); color: white; border: none; }
+        .btn-toggle.enable:hover { background: #388e3c; }
+
+        /* Message */
+        .message { padding: 12px 18px; border-radius: 8px; margin-bottom: 20px; display: none; border-left: 4px solid; }
+        .message.success { background: #e8f5e9; color: var(--success); border-color: var(--success); display: block; }
+        .message.error { background: #ffebee; color: var(--error); border-color: var(--error); display: block; }
+
+        @media (max-width: 1200px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 768px) { .stats-row { grid-template-columns: 1fr; } th, td { padding: 8px 6px; font-size: 0.75rem; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="logout-btn" onclick="logout()">Logout</button>
+        <div class="message" id="adminMessage"></div>
+        <div class="page">
+            <div class="page-header">
+                <h1>Admin Dashboard</h1>
+                <p class="page-subtitle">Manage users and API keys</p>
+            </div>
+            <div class="stats-row" id="statsRow">
+                <div class="stat-card"><div class="stat-value" id="totalUsers">0</div><div class="stat-label">Total Users</div></div>
+                <div class="stat-card"><div class="stat-value" id="activeUsers">0</div><div class="stat-label">Active</div></div>
+                <div class="stat-card warning"><div class="stat-value" id="warningUsers">0</div><div class="stat-label">Warning (25+ days)</div></div>
+                <div class="stat-card danger"><div class="stat-value" id="inactiveUsers">0</div><div class="stat-label">Inactive</div></div>
+            </div>
+            <div id="tableContainer"><div class="loading" style="text-align:center;padding:40px;color:#9e9e9e;">Loading data...</div></div>
+        </div>
+    </div>
+    <script>
+        let adminToken = localStorage.getItem('adminToken');
+        if (!adminToken) window.location.href = '/admin-login';
+
+        function showMessage(message, type) {
+            const msgEl = document.getElementById('adminMessage');
+            msgEl.textContent = message;
+            msgEl.className = `message ${type}`;
+            msgEl.style.display = 'block';
+            setTimeout(() => { msgEl.style.display = 'none'; }, 3000);
+        }
+
+        async function loadUsers() {
+            try {
+                const response = await fetch('/admin/users', { headers: { 'Authorization': 'Bearer ' + adminToken } });
+                if (response.status === 401) { localStorage.removeItem('adminToken'); window.location.href = '/admin-login'; return; }
+                const data = await response.json();
+                if (data.success && data.users.length > 0) {
+                    displayUsers(data.users);
+                    updateStats(data.users);
+                } else {
+                    document.getElementById('tableContainer').innerHTML = '<p style="text-align:center;padding:50px;color:#9e9e9e;">No registered users yet</p>';
+                }
+            } catch (error) {
+                document.getElementById('tableContainer').innerHTML = '<p style="text-align:center;padding:50px;color:#c62828;">Error: ' + error.message + '</p>';
+            }
+        }
+
+        function updateStats(users) {
+            const total = users.length;
+            const active = users.filter(u => u.is_active === 1 && u.login_status === 'ok').length;
+            const warning = users.filter(u => u.login_status === 'warning').length;
+            const inactive = users.filter(u => u.is_active === 0 || u.login_status === 'expired' || u.login_status === 'inactive').length;
+            document.getElementById('totalUsers').textContent = total;
+            document.getElementById('activeUsers').textContent = active;
+            document.getElementById('warningUsers').textContent = warning;
+            document.getElementById('inactiveUsers').textContent = inactive;
+        }
+
+        function getLoginBadge(user) {
+            if (user.is_active === 0) return `<span class="login-badge expired">Deactivated</span>`;
+            if (user.last_login_formatted === 'Never') return `<span class="login-badge never">Never logged in</span>`;
+            
+            const days = user.days_until_inactive;
+            if (days <= 0) return `<span class="login-badge expired">Expired</span>`;
+            if (days <= 5) return `<span class="login-badge warning">${days} days left</span>`;
+            return `<span class="login-badge ok">${days} days left</span>`;
+        }
+
+        function displayUsers(users) {
+            const tableHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>First</th>
+                            <th>Last</th>
+                            <th>Email</th>
+                            <th>API Key</th>
+                            <th>Last Login</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${users.map(user => {
+                            const isActive = user.is_active === 1;
+                            const statusClass = isActive ? 'aktif' : 'nonaktif';
+                            const statusText = isActive ? 'ACTIVE' : 'INACTIVE';
+                            const toggleText = isActive ? 'Disable' : 'Enable';
+                            const toggleClass = isActive ? '' : 'enable';
+                            
+                            return `
+                                <tr id="user-${user.id}">
+                                    <td>${user.id}</td>
+                                    <td>${user.nama_depan}</td>
+                                    <td>${user.nama_belakang}</td>
+                                    <td>${user.email}</td>
+                                    <td class="api-key-text" title="${user.api_key}">${user.api_key.substring(0, 25)}...</td>
+                                    <td>
+                                        <div class="login-info">
+                                            <span class="login-date">${user.last_login_formatted}</span>
+                                            ${getLoginBadge(user)}
+                                        </div>
+                                    </td>
+                                    <td><span class="status ${statusClass}">${statusText}</span></td>
+                                    <td class="action-cell">
+                                        <button class="action-btn btn-delete" onclick="deleteUser(${user.id})">Delete</button>
+                                        <button class="action-btn btn-toggle ${toggleClass}" onclick="toggleStatus(${user.id})">${toggleText}</button>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+            document.getElementById('tableContainer').innerHTML = tableHTML;
+        }
+
+        async function toggleStatus(userId) {
+            if (!confirm('Toggle status API Key user ini?')) return;
+            try {
+                const response = await fetch(`/admin/users/${userId}/toggle`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': 'Bearer ' + adminToken, 'Content-Type': 'application/json' }
+                });
+                if (response.status === 401) { localStorage.removeItem('adminToken'); window.location.href = '/admin-login'; return; }
+                const data = await response.json();
+                if (data.success) {
+                    showMessage(data.message, 'success');
+                    loadUsers(); // Reload untuk update semua data termasuk last_login
+                } else {
+                    showMessage('Gagal: ' + data.message, 'error');
+                }
+            } catch (error) { showMessage('Error: ' + error.message, 'error'); }
+        }
+
+        async function deleteUser(userId) {
+            if (!confirm('Hapus user ini?')) return;
+            try {
+                const response = await fetch(`/admin/users/${userId}`, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + adminToken } });
+                const data = await response.json();
+                if (data.success) { showMessage('User berhasil dihapus!', 'success'); loadUsers(); }
+                else { showMessage('Gagal: ' + data.message, 'error'); }
+            } catch (error) { showMessage('Error: ' + error.message, 'error'); }
+        }
+
+        function logout() {
+            if (confirm('Logout?')) { localStorage.removeItem('adminToken'); window.location.href = '/admin-login'; }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadUsers);
+    </script>
+</body>
+</html>
