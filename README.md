@@ -21,8 +21,15 @@ DATABASE APIKEY
 
 
 DATABASE USER
+
+
+
+
+
 <img width="523" height="272" alt="Screenshot 2025-11-21 185345" src="https://github.com/user-attachments/assets/8524a22d-2505-46e5-a24d-f0ab83892fdc" />
 
 
 DATABASE ADMIN
+
+
 <img width="520" height="268" alt="Screenshot 2025-11-21 185328" src="https://github.com/user-attachments/assets/454e020a-2c63-4488-b507-d4509908b881" />
