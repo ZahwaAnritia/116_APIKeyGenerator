@@ -13,8 +13,13 @@ DASHBOARD ADMIN:
 <img width="960" height="415" alt="Screenshot 2025-11-21 185024" src="https://github.com/user-attachments/assets/0eb441ca-a39e-47b7-b662-78b6de64bcea" />
 DATABASE:
 
+DATABASE APIKEY
+
 
 
 <img width="512" height="262" alt="Screenshot 2025-11-21 185357" src="https://github.com/user-attachments/assets/b13baa1a-0ce2-4011-abb2-994da742ca17" />
+
+
+
 <img width="523" height="272" alt="Screenshot 2025-11-21 185345" src="https://github.com/user-attachments/assets/8524a22d-2505-46e5-a24d-f0ab83892fdc" />
 <img width="520" height="268" alt="Screenshot 2025-11-21 185328" src="https://github.com/user-attachments/assets/454e020a-2c63-4488-b507-d4509908b881" />
